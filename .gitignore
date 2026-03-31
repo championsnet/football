@@ -27,3 +27,10 @@ cmake_install.cmake
 # IDE
 .idea
 .vs*
+
+# Local macOS/editor artifacts
+.DS_Store
+
+# Local runtime/training artifacts
+ppo_logs/
+gfootball_engine
