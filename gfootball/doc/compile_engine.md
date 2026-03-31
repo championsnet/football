@@ -47,6 +47,11 @@ python -m venv football-env
 football-env\Scripts\activate.bat
 :: For PowerShell users: football-env\Scripts\activate.ps1
 
+:: Or, create the environment with uv (Python 3.14 is recommended)
+uv venv --python 3.14 football-env
+football-env\Scripts\activate.bat
+:: For PowerShell users: football-env\Scripts\activate.ps1
+
 :: Upgrade pip and install additional packages
 python -m pip install --upgrade pip setuptools wheel
 python -m pip install psutil
@@ -55,6 +60,7 @@ python -m pip install psutil
 python -m pip install .
 ```
 
+If you prefer `uv`, run `uv sync --python 3.14` from the repository root instead of the `pip install .` step above.
 
 ## macOS (both Intel processors and Apple Silicon)
 
@@ -91,6 +97,15 @@ Use [virtual environment](https://docs.python.org/3/tutorial/venv.html) to avoid
 python3 -m venv football-env
 source football-env/bin/activate
 ```
+Or, create it with `uv`:
+
+```shell
+uv venv --python 3.14 football-env
+source football-env/bin/activate
+```
+
+Google Research Football currently supports Python 3.6+. On newer systems, pass `--python 3.14` to `uv` so it does not select a mismatched interpreter automatically.
+
 If you decide to use `conda` environment, use the following commands instead:
 
 ```shell
@@ -110,6 +125,11 @@ Finally, build the game environment:
 python3 -m pip install .
 ```
 
+The equivalent `uv` command is:
+
+```shell
+uv sync --python 3.14
+```
 
 ## Linux
 Install required packages:
@@ -139,10 +159,25 @@ python3 -m pip install --upgrade pip setuptools wheel
 python3 -m pip install psutil
 ```
 
+Or, with `uv`:
+
+```shell
+uv venv --python 3.14 football-env
+source football-env/bin/activate
+```
+
+Google Research Football currently supports Python 3.6+. On newer systems, pass `--python 3.14` to `uv` so it does not select a mismatched interpreter automatically.
+
 Finally, build the game environment:
 
 ```shell
 python3 -m pip install .
+```
+
+The equivalent `uv` command is:
+
+```shell
+uv sync --python 3.14
 ```
 
 ## Development mode
@@ -153,6 +188,18 @@ in the [development](https://packaging.python.org/guides/distributing-packages-u
 
 ```shell
 python3 -m pip install -e .
+```
+
+With `uv`, use:
+
+```shell
+uv sync --python 3.14
+```
+
+or:
+
+```shell
+uv pip install -e .
 ```
 
 In such case, Python source files can be edited in-place without reinstallation,

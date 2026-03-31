@@ -19,6 +19,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import time
+
 from absl import app
 from absl import flags
 from absl import logging
@@ -37,6 +39,16 @@ flags.DEFINE_enum('action_set', 'default', ['default', 'full'], 'Action set')
 flags.DEFINE_bool('real_time', True,
                   'If true, environment will slow down so humans can play.')
 flags.DEFINE_bool('render', True, 'Whether to do game rendering.')
+flags.DEFINE_enum('camera', 'broadcast', ['broadcast', 'tele', 'birds_eye', 'follow'],
+                  'Camera mode: broadcast (default wide view), tele (tight broadcast), '
+                  'birds_eye (top-down), follow (first-person view from possession player).')
+
+_CAMERA_MODE_MAP = {
+    'broadcast': 0,
+    'tele': 1,
+    'birds_eye': 2,
+    'follow': 3,
+}
 
 
 def main(_):
@@ -55,12 +67,22 @@ def main(_):
   env = football_env.FootballEnv(cfg)
   if FLAGS.render:
     env.render()
+  env._env._env.game_config.camera_mode = _CAMERA_MODE_MAP[FLAGS.camera]
   env.reset()
+  # 10 environment steps per second matches the game's internal 100 fps physics
+  # at the default physics_steps_per_frame=10 setting.
+  step_duration = 1.0 / 10.0
   try:
     while True:
+      t0 = time.monotonic()
       _, _, done, _ = env.step([])
       if done:
         env.reset()
+      if FLAGS.real_time:
+        elapsed = time.monotonic() - t0
+        remaining = step_duration - elapsed
+        if remaining > 0:
+          time.sleep(remaining)
   except KeyboardInterrupt:
     logging.warning('Game stopped, writing dump...')
     env.write_dump('shutdown')

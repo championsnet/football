@@ -92,27 +92,29 @@ bool GraphicsTask::Execute(boost::intrusive_ptr<Camera> camera) {
   float nearCap, farCap;
   camera->GetCapping(nearCap, farCap);
 
-  float fov = camera->GetFOV() * 2.0f;
-  float wideScreenMultiplier = 2.5f;
+  // FOV is the vertical field-of-view.  For 16:9 the horizontal half-angle is
+  // atan(tan(V/2) * 16/9), which is always larger than the vertical half-angle.
+  // Use the horizontal tangent × 1.3 as the frustum side-plane half-tangent so
+  // the culling frustum is always conservatively wider than the render frustum,
+  // regardless of vertical FOV (handles 90°, 120°, etc. without false culls).
+  float v_half_rad = camera->GetFOV() * (M_PI / 360.0f);
+  float side_tan = tanf(v_half_rad) * (16.0f / 9.0f) * 1.3f;
+
   vector_Planes bounding;
   Plane plane(cameraPos + cameraRot * Vector3(0, 0, -nearCap),
               cameraRot * Vector3(0, 0, -1).GetNormalized());
   bounding.push_back(plane);
-  plane.Set(
-      cameraPos,
-      cameraRot * Vector3(0, (3.6f * wideScreenMultiplier) / (fov / 24.0f), -1)
-                      .GetNormalized());
-  bounding.push_back(plane);
-  plane.Set(
-      cameraPos,
-      cameraRot * Vector3(0, (-3.6f * wideScreenMultiplier) / (fov / 24.0f), -1)
-                      .GetNormalized());
+  plane.Set(cameraPos,
+            cameraRot * Vector3(0,  side_tan, -1).GetNormalized());
   bounding.push_back(plane);
   plane.Set(cameraPos,
-            cameraRot * Vector3(2.4f / (fov / 24.0f), 0, -1).GetNormalized());
+            cameraRot * Vector3(0, -side_tan, -1).GetNormalized());
   bounding.push_back(plane);
   plane.Set(cameraPos,
-            cameraRot * Vector3(-2.4f / (fov / 24.0f), 0, -1).GetNormalized());
+            cameraRot * Vector3( side_tan, 0, -1).GetNormalized());
+  bounding.push_back(plane);
+  plane.Set(cameraPos,
+            cameraRot * Vector3(-side_tan, 0, -1).GetNormalized());
   bounding.push_back(plane);
   plane.Set(cameraPos + cameraRot * Vector3(0, 0, -farCap),
             cameraRot * Vector3(0, 0, 1).GetNormalized());

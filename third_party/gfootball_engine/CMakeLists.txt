@@ -1,4 +1,10 @@
-cmake_minimum_required(VERSION 3.4)
+cmake_minimum_required(VERSION 3.5)
+
+# CMake >= 3.30 prefers Boost's config package, which can miss components on
+# some Homebrew setups. Keep using FindBoost for compatibility.
+if(POLICY CMP0167)
+  cmake_policy(SET CMP0167 OLD)
+endif()
 
 if(WIN32)
   # Check for required Environment variables
@@ -123,7 +129,10 @@ else()
 endif()
 message("Using Boost.Python: ${BOOST_PYTHON_VERSION}")
 
-FIND_PACKAGE(Boost REQUIRED COMPONENTS thread system filesystem ${BOOST_PYTHON_VERSION})
+# Prefer CMake's FindBoost module over BoostConfig.cmake on Homebrew to avoid
+# missing component config files such as boost_systemConfig.cmake.
+set(Boost_NO_BOOST_CMAKE ON)
+FIND_PACKAGE(Boost REQUIRED COMPONENTS thread filesystem ${BOOST_PYTHON_VERSION})
 include_directories(${Boost_INCLUDE_DIRS})
 
 include_directories(${PROJECT_SOURCE_DIR}/src)
@@ -166,8 +175,11 @@ elseif(WIN32)
 endif()
 
 set(LIBRARIES gamelib menulib datalib blunted2
-   Boost::filesystem Boost::system Boost::thread Boost::${BOOST_PYTHON_VERSION}
+   Boost::filesystem Boost::thread Boost::${BOOST_PYTHON_VERSION}
    ${Py_TARGETS} ${SDL2_LIBS_ALL} ${EGL_LIBRARIES} ${OPENGL_LIBRARIES})
+if(TARGET Boost::system)
+  list(APPEND LIBRARIES Boost::system)
+endif()
 
 add_library(${OUTPUT_LIB_NAME} SHARED ${CORE_SOURCES} ${CORE_HEADERS} ${AI_HEADERS} ${AI_SOURCES})
 target_link_libraries(${OUTPUT_LIB_NAME} ${LIBRARIES})

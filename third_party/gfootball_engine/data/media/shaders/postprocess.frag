@@ -127,7 +127,10 @@ void main(void) {
   float fogFactor = clamp(fragDepth * 0.01f * (1.0f - fogScale) - 0.16f * fogScale, 0.0f, 0.25f);
 
   fragColor = fragColor * (1.0f - fogFactor) + fogColor * fogFactor;
-  if (depth > 0.999f) fragColor = fogColor; // fill 'background'/sky
+  // Depth remains exactly at the clear value for untouched background/skybox
+  // pixels. Use a very tight threshold so distant scene geometry is not
+  // misclassified as sky when using a long-range camera.
+  if (depth > 0.99999f) fragColor = fogColor; // fill 'background'/sky
 
   float brightness = 1.0f;
   float contrastBias = 0.3f;//0.1f; // 0 == normal .. 1 == 'fake hdri'

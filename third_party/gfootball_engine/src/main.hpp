@@ -73,6 +73,8 @@ class GameConfig {
   int physics_steps_per_frame = 10;
   int render_resolution_x = 1280;
   int render_resolution_y = 720;
+  // Camera mode: 0 = broadcast (default), 1 = follow player (third-person)
+  int camera_mode = 0;
   std::string updatePath(const std::string& path) {
 #ifdef WIN32
     boost::filesystem::path boost_path(path);
@@ -94,6 +96,7 @@ class GameConfig {
     state->process(physics_steps_per_frame);
     state->process(render_resolution_x);
     state->process(render_resolution_y);
+    state->process(camera_mode);
   }
  private:
   GameConfig() { }

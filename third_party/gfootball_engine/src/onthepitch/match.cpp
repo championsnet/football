@@ -562,7 +562,11 @@ void Match::UpdateIngameCamera() {
 
   // normal cam
 
-  int camMethod = 1; // 1 == wide, 2 == birds-eye, 3 == tele
+  // 0 = broadcast (wide), 1 = birds-eye, 2 = tele, 3 = follow player (third-person)
+  int camMethod = GetGameConfig().camera_mode == 1 ? 3
+                : GetGameConfig().camera_mode == 2 ? 2
+                : GetGameConfig().camera_mode == 3 ? 4  // follow player
+                : 1;  // default: broadcast wide
 
   if (!IsGoalScored() || (IsGoalScored() && goalScoredTimer < 1000)) {
     DO_VALIDATION;
@@ -618,6 +622,45 @@ void Match::UpdateIngameCamera() {
       cameraFOV = 15.0f;
       cameraNearCap = 50 + zoom * 10.0f;
       cameraFarCap = 300;
+
+    } else if (camMethod == 4) {
+      DO_VALIDATION;
+
+      // First-person cam: camera at the possession player's eye level,
+      // looking in their facing direction with a wide human-like FOV.
+      Player* focusPlayer = GetDesignatedPossessionPlayer();
+      Vector3 playerPos = focusPlayer->GetPosition();
+      Vector3 playerDir = focusPlayer->GetDirectionVec();
+
+      // Normalise the facing direction; fall back to attacking direction when idle.
+      float dirLen = std::sqrt(playerDir.coords[0] * playerDir.coords[0] +
+                               playerDir.coords[1] * playerDir.coords[1]);
+      if (dirLen < 0.01f) {
+        playerDir = Vector3(0, -1, 0);
+      } else {
+        playerDir = playerDir * (1.0f / dirLen);
+      }
+
+      // Place camera at eye height and slightly in front of the player center so
+      // the first-person view sits outside the player model.
+      float eyeHeight = 1.7f;
+      cameraNodePosition = playerPos
+                         + playerDir * 0.6f
+                         + Vector3(0, 0, eyeHeight);
+
+      // The camera's rest direction is -Z (straight down).  A rotation of
+      // exactly 0.5*pi around X lifts it to horizontal; 0.47*pi gives a
+      // comfortable ~6° downward tilt so the player can see the pitch ahead.
+      cameraOrientation.SetAngleAxis(0.47f * pi, Vector3(1, 0, 0));
+
+      // Yaw: rotate the camera node around Z to face the player's direction.
+      // atan2(dx, -dy) converts the 2-D direction vector to a Z-axis angle.
+      radian yaw = std::atan2(playerDir.coords[0], -playerDir.coords[1]);
+      cameraNodeOrientation.SetAngleAxis(yaw, Vector3(0, 0, 1));
+
+      cameraFOV = 90.0f;
+      cameraNearCap = 0.3f;
+      cameraFarCap = 300.0f;
     }
 
   } else {

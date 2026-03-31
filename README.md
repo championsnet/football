@@ -81,6 +81,15 @@ python3 -m venv football-env
 source football-env/bin/activate
 ```
 
+Or, with [uv](https://docs.astral.sh/uv/), create and manage the environment with:
+
+```shell
+uv venv --python 3.14 football-env
+source football-env/bin/activate
+```
+
+The project currently supports Python 3.6+. On newer systems, pass `--python 3.14` to `uv` so it does not pick a mismatched interpreter automatically.
+
 Next, build the game engine and install dependencies:
 
 ```shell
@@ -89,6 +98,14 @@ python3 -m pip install .
 This command can run for a couple of minutes, as it compiles the C++ environment in the background.
 If you face any problems, first check [Compiling Engine](gfootball/doc/compile_engine.md) documentation and search GitHub issues.
 
+To install from source with `uv`, run:
+
+```shell
+uv sync --python 3.14
+```
+
+`uv sync` performs an editable install of the local project, so code changes are picked up without reinstalling. If you prefer the pip-style workflow, `uv pip install .` and `uv pip install -e .` are also supported.
+
 
 #### 3. Time to play!
 ```shell
@@ -96,6 +113,12 @@ python3 -m gfootball.play_game --action_set=full
 ```
 Make sure to check out the [keyboard mappings](#keyboard-mappings).
 To quit the game press Ctrl+C in the terminal.
+
+If you are using `uv` without activating the virtual environment, you can run:
+
+```shell
+uv run python -m gfootball.play_game --action_set=full
+```
 
 # Contents #
 
@@ -116,27 +139,27 @@ To quit the game press Ctrl+C in the terminal.
 ## Training agents to play GRF
 
 ### Run training
-In order to run TF training, you need to install additional dependencies
+The public training example now uses a modern PPO stack based on
+Stable-Baselines3 instead of the legacy TensorFlow 1.15/OpenAI Baselines setup.
 
-- Update PIP, so that tensorflow 1.15 is available: `python3 -m pip install --upgrade pip setuptools wheel`
-- TensorFlow: `python3 -m pip install tensorflow==1.15.*` or
-  `python3 -m pip install tensorflow-gpu==1.15.*`, depending on whether you want CPU or
-  GPU version;
-- Sonnet and psutil: `python3 -m pip install dm-sonnet==1.* psutil`;
-- OpenAI Baselines:
-  `python3 -m pip install git+https://github.com/openai/baselines.git@master`.
+Install the extra training dependencies with:
+
+- `uv pip install stable-baselines3 gymnasium shimmy`
 
 Then:
 
-- To run example PPO experiment on `academy_empty_goal` scenario, run
+- To run an example PPO experiment on `academy_empty_goal_close`, run
   `python3 -m gfootball.examples.run_ppo2 --level=academy_empty_goal_close`
-- To run on `academy_pass_and_shoot_with_keeper` scenario, run
+- To run on `academy_pass_and_shoot_with_keeper`, run
   `python3 -m gfootball.examples.run_ppo2 --level=academy_pass_and_shoot_with_keeper`
 
-In order to train with nice replays being saved, run
+The default policy is a PyTorch port of the repo's IMPALA-style CNN encoder.
+You can also use a plain SB3 CNN or MLP with `--policy=cnn` or `--policy=mlp`.
+
+In order to train with replays being saved, run
 `python3 -m gfootball.examples.run_ppo2 --dump_full_episodes=True --render=True`
 
-In order to reproduce PPO results from the paper, please refer to:
+In order to reproduce the original legacy PPO2 results from the paper, please refer to:
 
 - gfootball/examples/repro_checkpoint_easy.sh
 - gfootball/examples/repro_scoring_easy.sh

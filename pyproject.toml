@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gfootball"
+version = "2.10.3"
+description = "Google Research Football - RL environment based on open-source game Gameplay Football"
+readme = "README.md"
+requires-python = ">=3.6"
+authors = [{ name = "Google LLC", email = "no-reply@google.com" }]
+license = { text = "Apache 2.0" }
+keywords = ["gfootball", "reinforcement-learning", "python", "machine learning"]
+dynamic = ["dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/google-research/football"
+Repository = "https://github.com/google-research/football"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.txt"] }
+
+[tool.uv]
+# gym<=0.21 has broken metadata that fails to build with modern tooling.
+# Override to the last version with correct metadata that still covers the
+# gfootball API surface.
+override-dependencies = ["gym==0.26.2"]
