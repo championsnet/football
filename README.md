@@ -164,6 +164,34 @@ In order to reproduce the original legacy PPO2 results from the paper, please re
 - gfootball/examples/repro_checkpoint_easy.sh
 - gfootball/examples/repro_scoring_easy.sh
 
+### Run full 11 vs 11 training
+
+To train a cooperative 11v11 agent system that simulates a full football match, use the dedicated script:
+
+- `python3 -m gfootball.examples.run_11v11`
+
+This trains a single **shared MLP policy** (parameter sharing) that is applied independently to each of the 11 left-team players. All players receive the same team reward (+1 goal scored, −1 goal conceded) making the setting fully cooperative. The right team is controlled by the built-in AI.
+
+Key flags:
+
+| Flag | Default | Meaning |
+|------|---------|---------|
+| `--level` | `11_vs_11_easy_stochastic` | Scenario (easy/hard/stochastic/competition) |
+| `--num_games` | `4` | Parallel games; total VecEnv width = `num_games × 11` |
+| `--num_timesteps` | `50_000_000` | Total environment steps |
+| `--reward_experiment` | `scoring,checkpoints` | Add dense checkpoint shaping |
+| `--load_path` | _(none)_ | Resume from an existing checkpoint |
+| `--logdir` | `ppo_logs_11v11` | Output directory |
+
+Example — harder opponent, more parallelism:
+
+```bash
+python3 -m gfootball.examples.run_11v11 \
+  --level=11_vs_11_hard_stochastic \
+  --num_games=8 \
+  --num_timesteps=200000000
+```
+
 ## Playing the game
 
 Please note that playing the game is implemented through an environment, so human-controlled players use the same interface as the agents.
